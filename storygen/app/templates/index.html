@@ -1,79 +1,189 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Story Generator</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Story Generator</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #fd9191 0%, #f03f3f 100%);
+
+            min-height: 100vh;
+        }
+        
+        .custom-card {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: none;
+            transition: transform 0.3s ease;
+        }
+        
+        .custom-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .btn-custom {
+            background: linear-gradient(135deg, #ff4757 0%, #ff3742 100%);
+            border: none;
+        }
+        
+        .btn-custom:hover {
+            background: linear-gradient(135deg, #ff3742 0%, #e63946 100%);
+            transform: translateY(-2px);
+        }
+        
+        .story-display {
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%);
+            border: 2px solid #ffccd5;
+            min-height: 120px;
+        }
+        
+        .card-header-custom {
+            background: linear-gradient(135deg, #ff4757 0%, #ff3742 100%);
+            color: white;
+            border: none;
+        }
+        
+        .success-alert {
+            display: none;
+        }
+    </style>
 </head>
 <body>
-  <h2>Add New Character</h2>
-  <input id="name" placeholder="Name" /><br>
-  <textarea id="details" placeholder="Character details..."></textarea><br>
-  <button onclick="createCharacter()">Add Character</button>
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-12 text-center mb-4">
+                <h1 class="text-white display-4 fw-bold">  Story Generator</h1>
+            </div>
+        </div>
+        
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="card custom-card h-100">
+                    <div class="card-header card-header-custom">
+                        <h5 class="mb-0">Add New Character</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" id="name" placeholder="Character Name">
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" id="details" rows="3" placeholder="Character details"></textarea>
+                        </div>
+                        <button class="btn btn-custom text-white w-100" onclick="createCharacter()">Add Character</button>
+                        <div id="successMessage" class="alert alert-success success-alert mt-3"></div>
+                    </div>
+                </div>
+            </div>
 
-  <h2>Generate Story</h2>
-  <input id="charname" placeholder="Enter character name" /><br>
-  <button onclick="generateStory()">Generate</button>
+            <div class="col-md-6">
+                <div class="card custom-card h-100">
+                    <div class="card-header card-header-custom">
+                        <h5 class="mb-0">Generate Story</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" id="charname" placeholder="Enter character name to generate story">
+                        </div>
+                        <button class="btn btn-custom text-white w-100" onclick="generateStory()">Generate Story</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-  <h3>Story:</h3>
-  <p id="storyBox" style="white-space: pre-line; background-color: #f3f3f3; padding: 10px;"></p>
+        <div class="row">
+            <div class="col-12">
+                <div class="card custom-card">
+                    <div class="card-header card-header-custom">
+                        <h5 class="mb-0">Your Generated Story</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="storyBox" class="story-display rounded p-4 font-italic">
+                            Click "Generate Story" to create a magical tale...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-  <script>
-    async function createCharacter() {
-      const name = document.getElementById("name").value.trim();
-      const details = document.getElementById("details").value.trim();
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        async function createCharacter() {
+            const name = document.getElementById("name").value.trim();
+            const details = document.getElementById("details").value.trim();
+            const successMessage = document.getElementById("successMessage");
 
-      if (!name || !details) {
-        alert("Please fill in both name and details.");
-        return;
-      }
+            if (!name || !details) {
+                alert("Please fill in both name and details.");
+                return;
+            }
 
-      try {
-        const res = await fetch("/api/create_character", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, details })
-        });
+            try {
+                const res = await fetch("/api/create_character", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name, details })
+                });
 
-        const data = await res.json();
+                const data = await res.json();
 
-        if (res.ok) {
-          alert("Character saved! ID: " + data.id);
-        } else {
-          alert(data.detail || "Error saving character.");
+                if (res.ok) {
+                    successMessage.textContent = `Character "${name}" saved successfully! ID: ${data.id}`;
+                    successMessage.style.display = "block";
+                    
+                    document.getElementById("name").value = "";
+                    document.getElementById("details").value = "";
+                    
+                    setTimeout(() => {
+                        successMessage.style.display = "none";
+                    }, 3000);
+                } else {
+                    alert(data.detail || "Error saving character.");
+                }
+            } catch (err) {
+                alert("Server error. Please try again later.");
+                console.error(err);
+            }
         }
-      } catch (err) {
-        alert("Server error. Please try again later.");
-        console.error(err);
-      }
-    }
 
-    async function generateStory() {
-      const character_name = document.getElementById("charname").value.trim();
-      const storyBox = document.getElementById("storyBox");
+        async function generateStory() {
+            const character_name = document.getElementById("charname").value.trim();
+            const storyBox = document.getElementById("storyBox");
 
-      if (!character_name) {
-        alert("Please enter a character name.");
-        return;
-      }
+            if (!character_name) {
+                alert("Please enter a character name.");
+                return;
+            }
 
-      try {
-        const res = await fetch("/api/generate_story", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ character_name })
-        });
+            storyBox.innerHTML = '<div class="text-center text-primary">🔮 Generating your magical story...</div>';
 
-        const data = await res.json();
+            try {
+                const res = await fetch("/api/generate_story", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ character_name })
+                });
 
-        if (res.ok) {
-          storyBox.innerText = data.story;
-        } else {
-          storyBox.innerText = data.detail || "Error generating story.";
+                const data = await res.json();
+
+                if (res.ok) {
+                    storyBox.innerText = data.story;
+                } else {
+                    storyBox.innerText = "" + (data.detail || "Error generating story.");
+                }
+            } catch (err) {
+                storyBox.innerText = "Server error or invalid response.";
+                console.error("Error:", err);
+            }
         }
-      } catch (err) {
-        storyBox.innerText = "Server error or invalid response.";
-        console.error("Error:", err);
-      }
-    }
-  </script>
+
+        document.getElementById("charname").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                generateStory();
+            }
+        });
+    </script>
 </body>
 </html>
