@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Story Generator</title>
+</head>
+<body>
+  <h2>Add New Character</h2>
+  <input id="name" placeholder="Name" /><br>
+  <textarea id="details" placeholder="Character details..."></textarea><br>
+  <button onclick="createCharacter()">Add Character</button>
+
+  <h2>Generate Story</h2>
+  <input id="charname" placeholder="Enter character name" /><br>
+  <button onclick="generateStory()">Generate</button>
+
+  <h3>Story:</h3>
+  <p id="storyBox" style="white-space: pre-line; background-color: #f3f3f3; padding: 10px;"></p>
+
+  <script>
+    async function createCharacter() {
+      const name = document.getElementById("name").value.trim();
+      const details = document.getElementById("details").value.trim();
+
+      if (!name || !details) {
+        alert("Please fill in both name and details.");
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/create_character", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, details })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          alert("Character saved! ID: " + data.id);
+        } else {
+          alert(data.detail || "Error saving character.");
+        }
+      } catch (err) {
+        alert("Server error. Please try again later.");
+        console.error(err);
+      }
+    }
+
+    async function generateStory() {
+      const character_name = document.getElementById("charname").value.trim();
+      const storyBox = document.getElementById("storyBox");
+
+      if (!character_name) {
+        alert("Please enter a character name.");
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/generate_story", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ character_name })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          storyBox.innerText = data.story;
+        } else {
+          storyBox.innerText = data.detail || "Error generating story.";
+        }
+      } catch (err) {
+        storyBox.innerText = "Server error or invalid response.";
+        console.error("Error:", err);
+      }
+    }
+  </script>
+</body>
+</html>
