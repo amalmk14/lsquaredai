@@ -42,6 +42,20 @@ def create_character(data: Character):
     except Exception as err:
         print("Insert error:", err)
         raise HTTPException(status_code=500, detail="Could not save character")
+    
+
+@app.get("/api/get_characters")
+def get_characters():
+    try:
+        result = supabase.table("Characters").select("id, name, details").execute()
+        
+        if result.data:
+            return result.data
+        else:
+            return []
+    except Exception as err:
+        print("Fetch error:", err)
+        raise HTTPException(status_code=500, detail="Could not fetch characters")
 
 @app.post("/api/generate_story")
 def generate_story(data: StoryRequest):
@@ -62,3 +76,5 @@ def generate_story(data: StoryRequest):
 
     story = get_ai_story(record['name'], record['details'])
     return {"story": story}
+
+

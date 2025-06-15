@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Story Generator</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
             background: linear-gradient(135deg, #fd9191 0%, #f03f3f 100%);
-
             min-height: 100vh;
         }
         
@@ -47,13 +47,30 @@
         .success-alert {
             display: none;
         }
+
+        .character-option {
+            padding: 8px 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .character-option:last-child {
+            border-bottom: none;
+        }
+
+        .refresh-btn {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 18px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <div class="container py-5">
         <div class="row">
             <div class="col-12 text-center mb-4">
-                <h1 class="text-white display-4 fw-bold">  Story Generator</h1>
+                <h1 class="text-white display-4 fw-bold"> Story Generator</h1>
             </div>
         </div>
         
@@ -68,7 +85,7 @@
                             <input type="text" class="form-control" id="name" placeholder="Character Name">
                         </div>
                         <div class="mb-3">
-                            <textarea class="form-control" id="details" rows="3" placeholder="Character details"></textarea>
+                            <textarea class="form-control" id="details" rows="3" placeholder="Character details and background..."></textarea>
                         </div>
                         <button class="btn btn-custom text-white w-100" onclick="createCharacter()">Add Character</button>
                         <div id="successMessage" class="alert alert-success success-alert mt-3"></div>
@@ -78,12 +95,16 @@
 
             <div class="col-md-6">
                 <div class="card custom-card h-100">
-                    <div class="card-header card-header-custom">
+                    <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Generate Story</h5>
+                        <button class="refresh-btn" onclick="loadCharacters()" title="Refresh character list"><i class="bi bi-arrow-repeat"></i></button>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <input type="text" class="form-control" id="charname" placeholder="Enter character name to generate story">
+                            <label for="characterSelect" class="form-label">Select a Character:</label>
+                            <select class="form-select" id="characterSelect">
+                                <option value="">Choose a character...</option>
+                            </select>
                         </div>
                         <button class="btn btn-custom text-white w-100" onclick="generateStory()">Generate Story</button>
                     </div>
@@ -95,11 +116,11 @@
             <div class="col-12">
                 <div class="card custom-card">
                     <div class="card-header card-header-custom">
-                        <h5 class="mb-0">Your Generated Story</h5>
+                        <h5 class="mb-0"> Your Generated Story</h5>
                     </div>
                     <div class="card-body">
                         <div id="storyBox" class="story-display rounded p-4 font-italic">
-                            Click "Generate Story" to create a magical tale...
+                            Select a character and click "Generate Story" to create a magical tale...
                         </div>
                     </div>
                 </div>
@@ -110,6 +131,47 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCharacters();
+            
+            document.getElementById('characterSelect').addEventListener('change', function() {
+                const storyBox = document.getElementById('storyBox');
+                if (this.value === '') {
+                    storyBox.innerHTML = 'Select a character and click "Generate Story" to create a magical tale...';
+                }
+            });
+        });
+
+        async function loadCharacters() {
+            try {
+                const res = await fetch("/api/get_characters");
+                const characters = await res.json();
+                
+                const select = document.getElementById("characterSelect");
+                select.innerHTML = '<option value="">Choose a character...</option>';
+                
+                const storyBox = document.getElementById("storyBox");
+                storyBox.innerHTML = 'Select a character and click "Generate Story" to create a magical tale...';
+                
+                if (characters && characters.length > 0) {
+                    characters.forEach(char => {
+                        const option = document.createElement("option");
+                        option.value = char.name;
+                        option.textContent = `${char.name} - ${char.details.substring(0, 50)}${char.details.length > 50 ? '...' : ''}`;
+                        select.appendChild(option);
+                    });
+                } else {
+                    const option = document.createElement("option");
+                    option.value = "";
+                    option.textContent = "No characters found. Add some first!";
+                    option.disabled = true;
+                    select.appendChild(option);
+                }
+            } catch (err) {
+                console.error("Error loading characters:", err);
+            }
+        }
+
         async function createCharacter() {
             const name = document.getElementById("name").value.trim();
             const details = document.getElementById("details").value.trim();
@@ -136,6 +198,8 @@
                     document.getElementById("name").value = "";
                     document.getElementById("details").value = "";
                     
+                    loadCharacters();
+                    
                     setTimeout(() => {
                         successMessage.style.display = "none";
                     }, 3000);
@@ -149,15 +213,15 @@
         }
 
         async function generateStory() {
-            const character_name = document.getElementById("charname").value.trim();
+            const character_name = document.getElementById("characterSelect").value;
             const storyBox = document.getElementById("storyBox");
 
             if (!character_name) {
-                alert("Please enter a character name.");
+                alert("Please select a character from the dropdown.");
                 return;
             }
 
-            storyBox.innerHTML = '<div class="text-center text-primary">🔮 Generating your magical story...</div>';
+            storyBox.innerHTML = '<div class="text-center text-primary"> Generating your magical story...</div>';
 
             try {
                 const res = await fetch("/api/generate_story", {
@@ -169,21 +233,16 @@
                 const data = await res.json();
 
                 if (res.ok) {
-                    storyBox.innerText = data.story;
+                    storyBox.innerHTML = `<div class="fs-5 lh-base">${data.story}</div>`;
                 } else {
-                    storyBox.innerText = "" + (data.detail || "Error generating story.");
+                    storyBox.innerHTML = `<div class="text-danger"> ${data.detail || "Error generating story."}</div>`;
                 }
             } catch (err) {
-                storyBox.innerText = "Server error or invalid response.";
+                storyBox.innerHTML = '<div class="text-danger"> Server error or invalid response.</div>';
                 console.error("Error:", err);
             }
         }
 
-        document.getElementById("charname").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                generateStory();
-            }
-        });
     </script>
 </body>
 </html>
