@@ -70,7 +70,7 @@ def generate_story(data: StoryRequest):
 
     if result.data:
         record = result.data[0]
-        print("🎯 Character fetched:", record)
+        print(" Character fetched:", record)
     else:
         raise HTTPException(status_code=404, detail="Character not found")
 
