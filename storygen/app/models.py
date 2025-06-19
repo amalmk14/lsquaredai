@@ -1,10 +1,10 @@
-from pydantic import BaseModel  # For data validation
-from typing import Optional     # For optional fields
+from pydantic import BaseModel  
+from typing import Optional    
 
 class Character(BaseModel):
-    name: str       # Character name
-    details: str    # Character description
+    name: str       
+    details: str    
 
 class StoryRequest(BaseModel):
-    id: Optional[int] = None             # Optional story ID
-    character_name: Optional[str] = None # Optional character name
+    id: Optional[int] = None             
+    character_name: Optional[str] = None 

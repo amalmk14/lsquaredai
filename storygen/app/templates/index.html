@@ -131,118 +131,117 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            loadCharacters();
-            
-            document.getElementById('characterSelect').addEventListener('change', function() {
-                const storyBox = document.getElementById('storyBox');
-                if (this.value === '') {
-                    storyBox.innerHTML = 'Select a character and click "Generate Story" to create a magical tale...';
-                }
-            });
-        });
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCharacters(); 
 
-        async function loadCharacters() {
-            try {
-                const res = await fetch("/api/get_characters");
-                const characters = await res.json();
-                
-                const select = document.getElementById("characterSelect");
-                select.innerHTML = '<option value="">Choose a character...</option>';
-                
-                const storyBox = document.getElementById("storyBox");
+        document.getElementById('characterSelect').addEventListener('change', function() {
+            const storyBox = document.getElementById('storyBox');
+            if (this.value === '') {
                 storyBox.innerHTML = 'Select a character and click "Generate Story" to create a magical tale...';
-                
-                if (characters && characters.length > 0) {
-                    characters.forEach(char => {
-                        const option = document.createElement("option");
-                        option.value = char.name;
-                        option.textContent = `${char.name} - ${char.details.substring(0, 50)}${char.details.length > 50 ? '...' : ''}`;
-                        select.appendChild(option);
-                    });
-                } else {
-                    const option = document.createElement("option");
-                    option.value = "";
-                    option.textContent = "No characters found. Add some first!";
-                    option.disabled = true;
-                    select.appendChild(option);
-                }
-            } catch (err) {
-                console.error("Error loading characters:", err);
             }
-        }
+        });
+    });
 
-        async function createCharacter() {
-            const name = document.getElementById("name").value.trim();
-            const details = document.getElementById("details").value.trim();
-            const successMessage = document.getElementById("successMessage");
-
-            if (!name || !details) {
-                alert("Please fill in both name and details.");
-                return;
-            }
-
-            try {
-                const res = await fetch("/api/create_character", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name, details })
-                });
-
-                const data = await res.json();
-
-                if (res.ok) {
-                    successMessage.textContent = `Character "${name}" saved successfully! ID: ${data.id}`;
-                    successMessage.style.display = "block";
-                    
-                    document.getElementById("name").value = "";
-                    document.getElementById("details").value = "";
-                    
-                    loadCharacters();
-                    
-                    setTimeout(() => {
-                        successMessage.style.display = "none";
-                    }, 3000);
-                } else {
-                    alert(data.detail || "Error saving character.");
-                }
-            } catch (err) {
-                alert("Server error. Please try again later.");
-                console.error(err);
-            }
-        }
-
-        async function generateStory() {
-            const character_name = document.getElementById("characterSelect").value;
+    async function loadCharacters() {
+        try {
+            const res = await fetch("/api/get_characters"); 
+            const characters = await res.json(); 
+            
+            const select = document.getElementById("characterSelect");
+            select.innerHTML = '<option value="">Choose a character...</option>'; 
             const storyBox = document.getElementById("storyBox");
+            storyBox.innerHTML = 'Select a character and click "Generate Story" to create a magical tale...';
 
-            if (!character_name) {
-                alert("Please select a character from the dropdown.");
-                return;
-            }
-
-            storyBox.innerHTML = '<div class="text-center text-primary"> Generating your magical story...</div>';
-
-            try {
-                const res = await fetch("/api/generate_story", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ character_name })
+            if (characters && characters.length > 0) {
+                characters.forEach(char => {
+                    const option = document.createElement("option");
+                    option.value = char.name;
+                    option.textContent = `${char.name} - ${char.details.substring(0, 50)}${char.details.length > 50 ? '...' : ''}`;
+                    select.appendChild(option);
                 });
-
-                const data = await res.json();
-
-                if (res.ok) {
-                    storyBox.innerHTML = `<div class="fs-5 lh-base">${data.story}</div>`;
-                } else {
-                    storyBox.innerHTML = `<div class="text-danger"> ${data.detail || "Error generating story."}</div>`;
-                }
-            } catch (err) {
-                storyBox.innerHTML = '<div class="text-danger"> Server error or invalid response.</div>';
-                console.error("Error:", err);
+            } else {
+                const option = document.createElement("option");
+                option.value = "";
+                option.textContent = "No characters found. Add some first!";
+                option.disabled = true;
+                select.appendChild(option);
             }
+        } catch (err) {
+            console.error("Error loading characters:", err);
+        }
+    }
+
+    async function createCharacter() {
+        const name = document.getElementById("name").value.trim();
+        const details = document.getElementById("details").value.trim();
+        const successMessage = document.getElementById("successMessage");
+
+        if (!name || !details) {
+            alert("Please fill in both name and details.");
+            return;
         }
 
-    </script>
+        try {
+            const res = await fetch("/api/create_character", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, details }) 
+            });
+
+            const data = await res.json(); 
+
+            if (res.ok) {
+                successMessage.textContent = `Character "${name}" saved successfully! ID: ${data.id}`;
+                successMessage.style.display = "block";
+
+                document.getElementById("name").value = "";
+                document.getElementById("details").value = "";
+
+                loadCharacters();
+
+                setTimeout(() => {
+                    successMessage.style.display = "none";
+                }, 3000);
+            } else {
+                alert(data.detail || "Error saving character.");
+            }
+        } catch (err) {
+            alert("Server error. Please try again later.");
+            console.error(err);
+        }
+    }
+
+    async function generateStory() {
+        const character_name = document.getElementById("characterSelect").value;
+        const storyBox = document.getElementById("storyBox");
+
+        if (!character_name) {
+            alert("Please select a character from the dropdown.");
+            return;
+        }
+
+        storyBox.innerHTML = '<div class="text-center text-primary"> Generating your magical story...</div>';
+
+        try {
+            const res = await fetch("/api/generate_story", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ character_name }) 
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                storyBox.innerHTML = `<div class="fs-5 lh-base">${data.story}</div>`;
+            } else {
+                storyBox.innerHTML = `<div class="text-danger"> ${data.detail || "Error generating story."}</div>`;
+            }
+        } catch (err) {
+            storyBox.innerHTML = '<div class="text-danger"> Server error or invalid response.</div>';
+            console.error("Error:", err);
+        }
+    }
+</script>
+
 </body>
 </html>
